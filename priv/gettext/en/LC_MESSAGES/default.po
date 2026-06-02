@@ -1,0 +1,4 @@
+## This file is a PO Template file.
+msgid ""
+msgstr ""
+"Language: en\n"
