@@ -48,6 +48,7 @@ defmodule Pingbase.AccountsTest do
   end
 
   describe "api_tokens" do
+    alias Pingbase.Accounts.User
     alias Pingbase.Accounts.ApiToken
 
     import Pingbase.AccountsFixtures

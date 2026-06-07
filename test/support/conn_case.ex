@@ -20,4 +20,12 @@ defmodule PingbaseWeb.ConnCase do
     Pingbase.DataCase.setup_sandbox(tags)
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
+
+  @doc """
+  Logs in a user by setting the session.
+  """
+  def log_in_user(conn, user) do
+    conn
+    |> Plug.Test.init_test_session(%{user_id: user.id})
+  end
 end
