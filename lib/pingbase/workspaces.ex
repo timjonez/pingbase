@@ -13,6 +13,7 @@ defmodule Pingbase.Workspaces do
   alias Pingbase.Workspaces.WorkspaceMembership
   alias Pingbase.Workspaces.WorkspaceInvite
   alias Pingbase.Accounts.User
+  alias Pingbase.Accounts.UserNotifier
 
   ## Workspaces
 
@@ -115,6 +116,24 @@ defmodule Pingbase.Workspaces do
   end
 
   @doc """
+  Gets a membership for a user in a workspace, raising if not found.
+  """
+  def get_membership!(%User{} = user, %Workspace{} = workspace) do
+    WorkspaceMembership
+    |> where(user_id: ^user.id, workspace_id: ^workspace.id)
+    |> Repo.one!()
+  end
+
+  @doc """
+  Updates a workspace membership.
+  """
+  def update_membership(%WorkspaceMembership{} = membership, attrs) do
+    membership
+    |> WorkspaceMembership.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
   Adds a member to a workspace.
   """
   def add_member(%Workspace{} = workspace, %User{} = user, role \\ "member") do
@@ -145,14 +164,52 @@ defmodule Pingbase.Workspaces do
   def create_invite(%Workspace{} = workspace, %User{} = invited_by, email) do
     expires_at = DateTime.utc_now() |> DateTime.add(7, :day) |> DateTime.truncate(:second)
 
-    %WorkspaceInvite{}
-    |> WorkspaceInvite.changeset(%{
-      email: email,
-      workspace_id: workspace.id,
-      invited_by_user_id: invited_by.id,
-      expires_at: expires_at
-    })
-    |> Repo.insert()
+    {token, token_hash} = generate_invite_token()
+
+    result =
+      %WorkspaceInvite{}
+      |> WorkspaceInvite.changeset(%{
+        email: email,
+        token_hash: token_hash,
+        workspace_id: workspace.id,
+        invited_by_user_id: invited_by.id,
+        expires_at: expires_at
+      })
+      |> Repo.insert()
+
+    with {:ok, _invite} <- result do
+      link = PingbaseWeb.Endpoint.url() <> "/join/#{token}"
+      UserNotifier.deliver_workspace_invite(email, workspace, invited_by, link)
+    end
+
+    result
+  end
+
+  @doc """
+  Gets a pending invite by its raw token.
+  """
+  def get_invite_by_token(token) when is_binary(token) do
+    token_hash = :crypto.hash(:sha256, token) |> Base.encode16(case: :lower)
+
+    WorkspaceInvite
+    |> where(token_hash: ^token_hash)
+    |> where([i], is_nil(i.accepted_at))
+    |> where([i], i.expires_at > ^DateTime.utc_now())
+    |> preload(:workspace)
+    |> Repo.one()
+  end
+
+  @doc """
+  Accepts an invite by its raw token for a given user.
+  """
+  def accept_invite_by_token(token, %User{} = user) when is_binary(token) do
+    case get_invite_by_token(token) do
+      nil ->
+        {:error, :invalid_or_expired_invite}
+
+      invite ->
+        accept_invite(invite, user)
+    end
   end
 
   @doc """
@@ -164,7 +221,38 @@ defmodule Pingbase.Workspaces do
       |> Ecto.Changeset.change(accepted_at: DateTime.utc_now() |> DateTime.truncate(:second))
       |> Repo.update!()
 
-      add_member(invite.workspace_id |> get_workspace!(), user)
+      workspace = get_workspace!(invite.workspace_id)
+
+      case get_membership(user, workspace) do
+        nil -> add_member(workspace, user)
+        _membership -> {:ok, :already_member}
+      end
     end)
+  end
+
+  @doc """
+  Lists pending invites for a workspace.
+  """
+  def list_workspace_invites(%Workspace{} = workspace) do
+    WorkspaceInvite
+    |> where(workspace_id: ^workspace.id)
+    |> where([i], is_nil(i.accepted_at))
+    |> where([i], i.expires_at > ^DateTime.utc_now())
+    |> preload(:invited_by_user)
+    |> order_by(desc: :inserted_at)
+    |> Repo.all()
+  end
+
+  @doc """
+  Cancels an invite.
+  """
+  def cancel_invite(%WorkspaceInvite{} = invite) do
+    Repo.delete(invite)
+  end
+
+  defp generate_invite_token do
+    token = :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
+    hashed = :crypto.hash(:sha256, token) |> Base.encode16(case: :lower)
+    {token, hashed}
   end
 end

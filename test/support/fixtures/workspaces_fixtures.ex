@@ -11,12 +11,13 @@ defmodule Pingbase.WorkspacesFixtures do
     user = attrs[:user] || AccountsFixtures.user_fixture()
 
     {:ok, workspace} =
-      attrs
-      |> Enum.into(%{
-        slug: "workspace-#{System.unique_integer()}",
-        name: "Test Workspace"
-      })
-      |> Workspaces.create_workspace(user)
+      Workspaces.create_workspace(
+        user,
+        Enum.into(attrs, %{
+          slug: "workspace-#{System.unique_integer()}",
+          name: "Test Workspace"
+        })
+      )
 
     workspace
   end

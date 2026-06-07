@@ -7,6 +7,7 @@ defmodule Pingbase.Workspaces.WorkspaceInvite do
 
   schema "workspace_invite" do
     field :email, :string
+    field :token_hash, :string
     field :accepted_at, :utc_datetime
     field :expires_at, :utc_datetime
 
@@ -19,7 +20,7 @@ defmodule Pingbase.Workspaces.WorkspaceInvite do
   @doc false
   def changeset(invite, attrs) do
     invite
-    |> cast(attrs, [:email, :accepted_at, :expires_at, :workspace_id, :invited_by_user_id])
+    |> cast(attrs, [:email, :token_hash, :accepted_at, :expires_at, :workspace_id, :invited_by_user_id])
     |> validate_required([:email, :expires_at, :workspace_id, :invited_by_user_id])
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/)
   end
