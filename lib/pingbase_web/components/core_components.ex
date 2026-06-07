@@ -9,7 +9,7 @@ defmodule PingbaseWeb.CoreComponents do
   @doc """
   Renders a flash message.
   """
-  attr :id, :string, doc: "the optional id of flash container"
+  attr :id, :string, default: nil, doc: "the optional id of flash container"
   attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
   attr :title, :string, doc: "the optional title of flash message"
   attr :kind, :atom, values: [:info, :error], doc: "used for icons and colors"
@@ -22,7 +22,7 @@ defmodule PingbaseWeb.CoreComponents do
     <div
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
       id={@id}
-      phx-click={JS.push("lv:clear-flash") |> JS.hide(to: "##{@id}")}
+      phx-click={if @id, do: JS.push("lv:clear-flash") |> JS.hide(to: "##{@id}"), else: JS.push("lv:clear-flash")}
       role="alert"
       class={[
         "fixed top-2 right-2 mr-2 w-80 sm:w-96 z-50 rounded-lg p-3 ring-1",
@@ -50,8 +50,8 @@ defmodule PingbaseWeb.CoreComponents do
 
   def flash_group(assigns) do
     ~H"""
-    <.flash kind={:info} flash={@flash} />
-    <.flash kind={:error} flash={@flash} />
+    <.flash kind={:info} id="flash-info" flash={@flash} />
+    <.flash kind={:error} id="flash-error" flash={@flash} />
     """
   end
 end

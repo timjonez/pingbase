@@ -3,6 +3,7 @@ const fs = require('fs')
 const path = require('path')
 
 module.exports = {
+  darkMode: 'media',
   content: [
     './js/**/*.js',
     '../lib/pingbase_web.ex',
