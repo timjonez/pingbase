@@ -12,9 +12,12 @@ defmodule Pingbase.Chat.Message do
     belongs_to :room, Pingbase.Chat.Room
     belongs_to :user, Pingbase.Accounts.User
     belongs_to :parent, Pingbase.Chat.Message
+    has_many :replies, Pingbase.Chat.Message, foreign_key: :parent_id
     has_many :reactions, Pingbase.Chat.MessageReaction
     has_many :mentions, Pingbase.Chat.MessageMention
     has_many :attachments, Pingbase.Chat.Attachment
+
+    field :reply_count, :integer, virtual: true
 
     timestamps(type: :utc_datetime)
   end

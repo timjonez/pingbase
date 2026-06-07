@@ -52,6 +52,35 @@ defmodule Pingbase.Notifications do
   end
 
   @doc """
+  Creates a mention notification for a user.
+  """
+  def notify_mention(%User{} = user, %Pingbase.Chat.Message{} = message) do
+    create_notification(%{
+      user_id: user.id,
+      type: "mention",
+      resource_type: "message",
+      resource_id: message.id
+    })
+  end
+
+  @doc """
+  Creates a thread reply notification for the parent message author.
+  """
+  def notify_thread_reply(%Pingbase.Chat.Message{} = reply, %Pingbase.Chat.Message{} = parent) do
+    # Don't notify if replying to your own message
+    if reply.user_id != parent.user_id do
+      create_notification(%{
+        user_id: parent.user_id,
+        type: "thread_reply",
+        resource_type: "message",
+        resource_id: reply.id
+      })
+    else
+      {:ok, nil}
+    end
+  end
+
+  @doc """
   Marks a notification as read.
   """
   def mark_as_read(%Notification{} = notification) do
