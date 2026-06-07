@@ -11,6 +11,8 @@ defmodule Pingbase.Repo.Migrations.CreateUsers do
       add :status_text, :string
       add :status_emoji, :string
       add :confirmed_at, :utc_datetime
+      add :magic_link_hash, :string
+      add :magic_link_expires_at, :utc_datetime
 
       timestamps(type: :utc_datetime)
     end
