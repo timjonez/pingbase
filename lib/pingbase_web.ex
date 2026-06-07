@@ -79,12 +79,25 @@ defmodule PingbaseWeb do
     quote do
       import Phoenix.HTML
       import Phoenix.HTML.Form
-      use PhoenixHTMLHelpers
 
       import PingbaseWeb.CoreComponents
       import PingbaseWeb.Gettext
 
+      use Phoenix.VerifiedRoutes,
+        endpoint: PingbaseWeb.Endpoint,
+        router: PingbaseWeb.Router,
+        statics: PingbaseWeb.static_paths()
+
       alias Phoenix.LiveView.JS
+    end
+  end
+
+  def verified_routes do
+    quote do
+      use Phoenix.VerifiedRoutes,
+        endpoint: PingbaseWeb.Endpoint,
+        router: PingbaseWeb.Router,
+        statics: PingbaseWeb.static_paths()
     end
   end
 

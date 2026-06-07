@@ -4,7 +4,7 @@ defmodule PingbaseWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_pingbase_key",
-    signing_salt: "change-me-in-runtime-config",
+    signing_salt: "a-very-long-signing-salt-for-pingbase-sessions-must-be-at-least-64-bytes-long",
     same_site: "Lax"
   ]
 
@@ -19,8 +19,6 @@ defmodule PingbaseWeb.Endpoint do
     only: PingbaseWeb.static_paths()
 
   if code_reloading? do
-    socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
-    plug Phoenix.LiveReloader
     plug Phoenix.CodeReloader
     plug Phoenix.Ecto.CheckRepoStatus, otp_app: :pingbase
   end

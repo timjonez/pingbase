@@ -3,7 +3,8 @@ import Config
 
 config :pingbase,
   ecto_repos: [Pingbase.Repo],
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  env: config_env()
 
 config :pingbase, PingbaseWeb.Endpoint,
   url: [host: "localhost"],
@@ -13,7 +14,8 @@ config :pingbase, PingbaseWeb.Endpoint,
     layout: false
   ],
   pubsub_server: Pingbase.PubSub,
-  live_view: [signing_salt: "change-me-in-runtime-config"]
+  live_view: [signing_salt: "a-very-long-live-view-signing-salt-for-pingbase-app"],
+  secret_key_base: "this-is-a-development-secret-key-base-that-needs-to-be-at-least-64-characters-long"
 
 config :pingbase, Pingbase.Mailer, adapter: Swoosh.Adapters.Local
 

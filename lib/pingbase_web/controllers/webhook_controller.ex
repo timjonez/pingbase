@@ -27,7 +27,7 @@ defmodule PingbaseWeb.WebhookController do
     end
   end
 
-  def slash_command(conn, %{"command_id" => command_id}) do
+  def slash_command(conn, %{"command_id" => _command_id}) do
     # TODO: Implement slash command handling
     conn
     |> put_status(:ok)
